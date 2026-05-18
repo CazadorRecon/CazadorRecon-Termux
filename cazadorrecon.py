@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CazadorRecon v20.0 - Version limpia y estable para Termux
+CazadorRecon v20.1 - Resultados en pantalla + archivo TXT
 """
 
 import os
@@ -44,8 +44,10 @@ def run_command(cmd):
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=180)
         print(result.stdout.strip())
+        return result.stdout.strip()
     except Exception as e:
         print(f"[!] Error: {e}")
+        return ""
 
 def phone_basic(phone):
     print(f"[+] Informacion del numero +{phone}")
@@ -88,22 +90,38 @@ def telegram_osint(username):
 
 def run_sherlock(username):
     print(f"[+] Ejecutando Sherlock en @{username}...")
-    run_command(f"sherlock {username} --timeout 15")
+    output = run_command(f"sherlock {username} --timeout 15")
+    
+    # Guardar en archivo TXT
+    filename = RESULT_DIR / f"sherlock_{username}.txt"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(output)
+    print(f"[OK] Resultados guardados en: {filename}")
 
 def run_maigret(username):
     print(f"[+] Ejecutando Maigret en @{username}...")
-    run_command(f"maigret {username} --timeout 15")
+    output = run_command(f"maigret {username} --timeout 15")
+    
+    filename = RESULT_DIR / f"maigret_{username}.txt"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(output)
+    print(f"[OK] Resultados guardados en: {filename}")
 
 def run_holehe(email):
     print(f"[+] Ejecutando Holehe en {email}...")
-    run_command(f"holehe {email} --only-used")
+    output = run_command(f"holehe {email} --only-used")
+    
+    filename = RESULT_DIR / f"holehe_{email.replace('@','_')}.txt"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(output)
+    print(f"[OK] Resultados guardados en: {filename}")
 
 def text_menu():
     proxies = load_proxies()
-    print(f"\nCazadorRecon v20.0 | Proxies: {len(proxies)}\n")
+    print(f"\nCazadorRecon v20.1 | Proxies: {len(proxies)}\n")
     while True:
         print("="*60)
-        print("                    CAZADORRECON v20.0")
+        print("                    CAZADORRECON v20.1")
         print("="*60)
         print("1. Sherlock")
         print("2. Maigret")
@@ -133,7 +151,7 @@ def text_menu():
             break
 
 def main():
-    parser = argparse.ArgumentParser(description="CazadorRecon v20.0")
+    parser = argparse.ArgumentParser(description="CazadorRecon v20.1")
     parser.add_argument('--menu', action='store_true')
     args = parser.parse_args()
     if args.menu or len(sys.argv) == 1:
