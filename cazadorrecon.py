@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
-CazadorRecon v20.2 - Mejorado para Termux
-- Resultados guardados en carpeta 'results/'
-- WhatsApp mejorado con mensajes claros
+CazadorRecon v20.3 - Organizado por carpetas
 """
 
 import os
@@ -19,10 +17,19 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-# Guardar resultados en carpeta 'results/' junto al script
 SCRIPT_DIR = Path(__file__).parent
 RESULT_DIR = SCRIPT_DIR / "results"
 RESULT_DIR.mkdir(exist_ok=True)
+
+# Crear subcarpetas por herramienta
+SHERLOCK_DIR = RESULT_DIR / "sherlock"
+MAIGRET_DIR = RESULT_DIR / "maigret"
+WHATSAPP_DIR = RESULT_DIR / "whatsapp"
+TELEGRAM_DIR = RESULT_DIR / "telegram"
+HOLEHE_DIR = RESULT_DIR / "holehe"
+
+for folder in [SHERLOCK_DIR, MAIGRET_DIR, WHATSAPP_DIR, TELEGRAM_DIR, HOLEHE_DIR]:
+    folder.mkdir(exist_ok=True)
 
 PROXIES_FILE = Path("proxies.txt")
 
@@ -54,7 +61,7 @@ def run_command(cmd):
         return ""
 
 def phone_basic(phone):
-    print(f"[+] Informacion del numero +{phone}")
+    print(f"\n[+] Informacion del numero +{phone}")
     try:
         import phonenumbers
         from phonenumbers import geocoder, carrier
@@ -75,22 +82,20 @@ def whatsapp_osint(phone):
         
         if r.status_code != 200 or "invalid" in r.text.lower():
             print("❌ Este numero NO tiene WhatsApp")
+            with open(WHATSAPP_DIR / f"{phone}.txt", "w") as f:
+                f.write(f"Numero: +{phone}\nTiene WhatsApp: No\n")
             return
         
         print("✅ Este numero TIENE WhatsApp")
         
-        # Intentar extraer foto de perfil
         img_match = re.search(r'src="(https?://[^"]+?profile[^"]*\.jpg[^"]*)"', r.text, re.I)
         if img_match:
             print("[+] Foto de perfil encontrada")
-        else:
-            print("[i] No se pudo obtener foto de perfil (requiere login)")
-            
-        # Guardar resultado
-        filename = RESULT_DIR / f"whatsapp_{phone}.txt"
+        
+        filename = WHATSAPP_DIR / f"{phone}.txt"
         with open(filename, "w", encoding="utf-8") as f:
             f.write(f"Numero: +{phone}\nTiene WhatsApp: Si\n")
-        print(f"[OK] Resultado guardado en: {filename}")
+        print(f"[OK] Guardado en: results/whatsapp/{phone}.txt")
         
     except Exception as e:
         print(f"Error: {e}")
@@ -110,10 +115,10 @@ def telegram_osint(username):
             
         print("✅ Usuario encontrado en Telegram")
         
-        filename = RESULT_DIR / f"telegram_{username}.txt"
+        filename = TELEGRAM_DIR / f"{username}.txt"
         with open(filename, "w", encoding="utf-8") as f:
             f.write(f"Usuario: @{username}\nEncontrado: Si\n")
-        print(f"[OK] Resultado guardado en: {filename}")
+        print(f"[OK] Guardado en: results/telegram/{username}.txt")
         
     except Exception as e:
         print(f"Error: {e}")
@@ -122,35 +127,35 @@ def run_sherlock(username):
     print(f"\n[+] Ejecutando Sherlock en @{username}...")
     output = run_command(f"sherlock {username} --timeout 15")
     
-    filename = RESULT_DIR / f"sherlock_{username}.txt"
+    filename = SHERLOCK_DIR / f"{username}.txt"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(output)
-    print(f"[OK] Resultados guardados en: {filename}")
+    print(f"[OK] Guardado en: results/sherlock/{username}.txt")
 
 def run_maigret(username):
     print(f"\n[+] Ejecutando Maigret en @{username}...")
     output = run_command(f"maigret {username} --timeout 15")
     
-    filename = RESULT_DIR / f"maigret_{username}.txt"
+    filename = MAIGRET_DIR / f"{username}.txt"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(output)
-    print(f"[OK] Resultados guardados en: {filename}")
+    print(f"[OK] Guardado en: results/maigret/{username}.txt")
 
 def run_holehe(email):
     print(f"\n[+] Ejecutando Holehe en {email}...")
     output = run_command(f"holehe {email} --only-used")
     
-    filename = RESULT_DIR / f"holehe_{email.replace('@','_')}.txt"
+    filename = HOLEHE_DIR / f"{email.replace('@','_')}.txt"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(output)
-    print(f"[OK] Resultados guardados en: {filename}")
+    print(f"[OK] Guardado en: results/holehe/{email.replace('@','_')}.txt")
 
 def text_menu():
     proxies = load_proxies()
-    print(f"\nCazadorRecon v20.2 | Proxies: {len(proxies)}\n")
+    print(f"\nCazadorRecon v20.3 | Organizado por carpetas\n")
     while True:
         print("="*60)
-        print("                    CAZADORRECON v20.2")
+        print("                    CAZADORRECON v20.3")
         print("="*60)
         print("1. Sherlock")
         print("2. Maigret")
@@ -180,7 +185,7 @@ def text_menu():
             break
 
 def main():
-    parser = argparse.ArgumentParser(description="CazadorRecon v20.2")
+    parser = argparse.ArgumentParser(description="CazadorRecon v20.3")
     parser.add_argument('--menu', action='store_true')
     args = parser.parse_args()
     if args.menu or len(sys.argv) == 1:
